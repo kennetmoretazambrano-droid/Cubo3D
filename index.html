@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cubo 3D de cristal con universo dentro</title>
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --s:min(46vmin,260px);
+  --text:#eef0ff; --muted:#a8b0d8;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0}
+body{
+  /* estudio oscuro con luces suaves para que el cristal tenga qué reflejar */
+  background:
+    radial-gradient(ellipse 45% 35% at 18% 20%,rgba(90,130,255,.28),transparent 70%),
+    radial-gradient(ellipse 40% 30% at 85% 25%,rgba(255,150,90,.18),transparent 70%),
+    radial-gradient(ellipse 50% 30% at 50% 100%,rgba(140,90,255,.25),transparent 70%),
+    linear-gradient(180deg,#10122a,#07080f);
+  color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow:hidden;user-select:none;-webkit-user-select:none;
+}
+.scene{position:relative;width:var(--s);height:var(--s);perspective:1100px;touch-action:none;cursor:grab}
+.scene:active{cursor:grabbing}
+.cube,.inner{position:absolute;inset:0;transform-style:preserve-3d;will-change:transform}
+.inner{inset:25%}
+
+/* ---------- Cristal ---------- */
+.glass{
+  --a:.08;
+  position:absolute;inset:0;border-radius:6px;overflow:hidden;
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,0) 45%,rgba(120,170,255,.10)),
+    rgba(170,200,255,var(--a));
+  border:1.5px solid rgba(235,245,255,.9);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.35),
+    inset 4px 0 0 rgba(255,90,140,.22),     /* aberración cromática */
+    inset -4px 0 0 rgba(80,210,255,.25),
+    inset 0 0 28px rgba(190,215,255,.45),   /* grosor del vidrio */
+    0 0 18px rgba(150,180,255,.35);
+}
+.glass::before{                              /* bisel interior */
+  content:"";position:absolute;inset:7px;border-radius:3px;
+  border:1px solid rgba(255,255,255,.28);
+  box-shadow:inset 0 0 10px rgba(255,255,255,.18);
+}
+.shine{position:absolute;inset:0;pointer-events:none;opacity:0;
+  background-repeat:no-repeat;mix-blend-mode:screen;
+  background-image:
+    linear-gradient(115deg,transparent 30%,rgba(255,255,255,.75) 38%,rgba(255,255,255,.12) 43%,transparent 48%,transparent 60%,rgba(255,255,255,.4) 64%,transparent 69%),
+    radial-gradient(circle at 24% 18%,rgba(255,255,255,.65),transparent 42%);
+  background-size:260% 260%,100% 100%;
+}
+.glass:nth-child(1){transform:translateZ(calc(var(--s)/2))}
+.glass:nth-child(2){transform:rotateY(180deg) translateZ(calc(var(--s)/2))}
+.glass:nth-child(3){transform:rotateY(90deg) translateZ(calc(var(--s)/2))}
+.glass:nth-child(4){transform:rotateY(-90deg) translateZ(calc(var(--s)/2))}
+.glass:nth-child(5){transform:rotateX(90deg) translateZ(calc(var(--s)/2))}
+.glass:nth-child(6){transform:rotateX(-90deg) translateZ(calc(var(--s)/2))}
+
+/* ---------- Universo interior ---------- */
+.uni{
+  position:absolute;inset:0;background-color:#05050f;background-size:cover;
+  border:1px solid rgba(170,190,255,.5);
+  box-shadow:inset 0 0 24px rgba(120,140,255,.4);
+}
+.uni:nth-child(1){transform:translateZ(calc(var(--s)/4))}
+.uni:nth-child(2){transform:rotateY(180deg) translateZ(calc(var(--s)/4))}
+.uni:nth-child(3){transform:rotateY(90deg) translateZ(calc(var(--s)/4))}
+.uni:nth-child(4){transform:rotateY(-90deg) translateZ(calc(var(--s)/4))}
+.uni:nth-child(5){transform:rotateX(90deg) translateZ(calc(var(--s)/4))}
+.uni:nth-child(6){transform:rotateX(-90deg) translateZ(calc(var(--s)/4))}
+
+/* ---------- Piso: sombra y luz proyectada ---------- */
+.floor{
+  width:calc(var(--s)*1.1);height:calc(var(--s)*.14);margin-top:calc(var(--s)*.42);
+  background:radial-gradient(ellipse at center,rgba(140,150,255,.45),rgba(60,60,160,.18) 45%,transparent 72%);
+  filter:blur(8px);
+}
+.hint{margin-top:18px;font-size:14px;color:var(--muted);text-align:center;padding:0 16px}
+.controls{display:flex;gap:10px;margin-top:14px}
+button{
+  font:inherit;font-size:14px;color:var(--text);cursor:pointer;
+  background:rgba(20,22,50,.6);border:1px solid rgba(170,190,255,.5);border-radius:999px;padding:8px 16px;
+}
+button:hover{background:rgba(90,100,200,.35)}
+</style>
+</head>
+<body>
+  <div class="scene" id="scene">
+    <div class="cube" id="cube">
+      <div class="glass"><div class="shine"></div></div>
+      <div class="glass"><div class="shine"></div></div>
+      <div class="glass"><div class="shine"></div></div>
+      <div class="glass"><div class="shine"></div></div>
+      <div class="glass"><div class="shine"></div></div>
+      <div class="glass"><div class="shine"></div></div>
+      <div class="inner" id="inner">
+        <div class="uni"></div><div class="uni"></div><div class="uni"></div>
+        <div class="uni"></div><div class="uni"></div><div class="uni"></div>
+      </div>
+    </div>
+  </div>
+  <div class="floor" id="floor"></div>
+  <p class="hint">Arrastra el cubo para girarlo a tu gusto</p>
+  <div class="controls">
+    <button id="toggle" type="button">Pausar</button>
+    <button id="reset" type="button">Reiniciar</button>
+  </div>
+
+<script>
+(function(){
+  /* ---------- Texturas de universo ---------- */
+  var tints=[['90,60,220','30,120,255'],['220,60,150','120,60,220'],['30,160,220','60,90,230'],
+             ['150,60,230','230,90,170'],['40,190,200','60,110,240'],['230,120,70','180,60,160']];
+  var uni=document.querySelectorAll('.uni');
+  function makeTexture(tint){
+    var c=document.createElement('canvas'); c.width=c.height=300; var x=c.getContext('2d');
+    x.fillStyle='#05050f'; x.fillRect(0,0,300,300);
+    [[.3,.35,tint[0]],[.7,.7,tint[1]]].forEach(function(n){
+      var g=x.createRadialGradient(300*n[0],300*n[1],0,300*n[0],300*n[1],170);
+      g.addColorStop(0,'rgba('+n[2]+',.6)'); g.addColorStop(1,'rgba('+n[2]+',0)');
+      x.fillStyle=g; x.fillRect(0,0,300,300);
+    });
+    for(var i=0;i<110;i++){
+      x.globalAlpha=Math.random()*.6+.4; x.fillStyle='#fff';
+      x.beginPath(); x.arc(Math.random()*300,Math.random()*300,Math.random()*1.5+.3,0,6.283); x.fill();
+    }
+    for(var j=0;j<4;j++){
+      var bx=Math.random()*240+30, by=Math.random()*240+30;
+      var bg=x.createRadialGradient(bx,by,0,bx,by,13);
+      bg.addColorStop(0,'rgba(255,255,255,1)'); bg.addColorStop(1,'rgba(255,255,255,0)');
+      x.globalAlpha=1; x.fillStyle=bg; x.fillRect(bx-13,by-13,26,26);
+      x.strokeStyle='rgba(255,255,255,.7)'; x.lineWidth=1;
+      x.beginPath(); x.moveTo(bx-11,by); x.lineTo(bx+11,by); x.moveTo(bx,by-11); x.lineTo(bx,by+11); x.stroke();
+    }
+    return c.toDataURL('image/jpeg',.9);
+  }
+  for(var f=0;f<uni.length;f++) uni[f].style.backgroundImage='url('+makeTexture(tints[f])+')';
+
+  /* ---------- Iluminación del cristal ---------- */
+  var glass=Array.prototype.slice.call(document.querySelectorAll('.glass'));
+  var shines=glass.map(function(g){return g.querySelector('.shine');});
+  var normals=[[0,0,1],[0,0,-1],[1,0,0],[-1,0,0],[0,-1,0],[0,1,0]];
+  var L=[-.5,-.7,.55], ll=Math.sqrt(L[0]*L[0]+L[1]*L[1]+L[2]*L[2]); L=[L[0]/ll,L[1]/ll,L[2]/ll];
+  var H=[L[0],L[1],L[2]+1], hl=Math.sqrt(H[0]*H[0]+H[1]*H[1]+H[2]*H[2]); H=[H[0]/hl,H[1]/hl,H[2]/hl];
+
+  function light(rx,ry){
+    var cx=Math.cos(rx*Math.PI/180), sx=Math.sin(rx*Math.PI/180);
+    var cy=Math.cos(ry*Math.PI/180), sy=Math.sin(ry*Math.PI/180);
+    for(var i=0;i<6;i++){
+      var n=normals[i];
+      var x1=n[0]*cy+n[2]*sy, y1=n[1], z1=-n[0]*sy+n[2]*cy;
+      var x2=x1, y2=y1*cx-z1*sx, z2=y1*sx+z1*cx;
+      var front=z2>0;
+      var spec=Math.pow(Math.max(0,x2*H[0]+y2*H[1]+z2*H[2]),14);
+      var diff=Math.max(0,x2*L[0]+y2*L[1]+z2*L[2]);
+      var fres=1-Math.min(1,Math.abs(z2));                 // más opaco en ángulos rasantes
+      glass[i].style.setProperty('--a',(.05+fres*.2+diff*.06).toFixed(3));
+      shines[i].style.opacity=Math.min(1,(front?1:.35)*(spec*1.6+diff*.25)).toFixed(3);
+      shines[i].style.backgroundPosition=(50+x2*45).toFixed(1)+'% '+(50+y2*45).toFixed(1)+'%,0 0';
+    }
+  }
+
+  /* ---------- Rotación ---------- */
+  var cube=document.getElementById('cube'), inner=document.getElementById('inner');
+  var floor=document.getElementById('floor'), scene=document.getElementById('scene');
+  var toggle=document.getElementById('toggle'), reset=document.getElementById('reset');
+  var rx=-25, ry=35, vx=0, vy=0, autoX=18, autoY=32, spin=0;
+  var auto=true, dragging=false, lastX=0, lastY=0, lastT=0, last=performance.now();
+
+  function frame(now){
+    var dt=Math.min((now-last)/1000,0.05); last=now;
+    if(!dragging){
+      var tx=auto?autoX:0, ty=auto?autoY:0, k=1-Math.exp(-2.2*dt);
+      vx+=(tx-vx)*k; vy+=(ty-vy)*k; rx+=vx*dt; ry+=vy*dt;
+    }
+    if(auto&&!dragging) spin+=40*dt;
+    cube.style.transform='rotateX('+rx+'deg) rotateY('+ry+'deg)';
+    inner.style.transform='rotateY('+(spin*1.2)+'deg) rotateX('+(spin*.7)+'deg) rotateZ('+(spin*.4)+'deg)';
+    light(rx,ry);
+    floor.style.transform='scaleX('+(0.92+0.08*Math.abs(Math.sin(ry*Math.PI/90))).toFixed(3)+')';
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  scene.addEventListener('pointerdown',function(e){
+    dragging=true; lastX=e.clientX; lastY=e.clientY; lastT=performance.now();
+    scene.setPointerCapture(e.pointerId);
+  });
+  scene.addEventListener('pointermove',function(e){
+    if(!dragging) return;
+    var now=performance.now(), dt=Math.max((now-lastT)/1000,0.001);
+    var dx=e.clientX-lastX, dy=e.clientY-lastY;
+    ry+=dx*0.5; rx-=dy*0.5;
+    vy=Math.max(-720,Math.min(720,(dx*0.5)/dt));
+    vx=Math.max(-720,Math.min(720,-(dy*0.5)/dt));
+    lastX=e.clientX; lastY=e.clientY; lastT=now;
+  });
+  function end(){ dragging=false; last=performance.now(); }
+  scene.addEventListener('pointerup',end);
+  scene.addEventListener('pointercancel',end);
+  toggle.addEventListener('click',function(){ auto=!auto; toggle.textContent=auto?'Pausar':'Reanudar'; });
+  reset.addEventListener('click',function(){ rx=-25; ry=35; vx=0; vy=0; spin=0; auto=true; toggle.textContent='Pausar'; });
+})();
+</script>
+</body>
+</html>
